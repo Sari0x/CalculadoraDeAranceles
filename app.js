@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculator Elements
     const comisionInput = document.getElementById('comision');
     const recuperoInput = document.getElementById('recupero');
+    const tasaProductecaInput = document.getElementById('tasa-producteca');
     const markupResult = document.getElementById('markup-result');
     const saveArea = document.getElementById('save-area');
     const newStoreName = document.getElementById('new-store-name');
@@ -58,9 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return isNaN(num) ? 0 : num / 100;
     };
 
-    const calculateMarkup = (com, rec) => {
+    const calculateMarkup = (com, rec, tasa) => {
         const iva = 0.21;
-        const descuento = com + rec;
+        const descuento = com + rec + tasa;
         const descuentoConIVA = descuento + (descuento * iva);
         if (descuento >= 1 || descuentoConIVA >= 1) return null;
         return (((1 / (1 - descuentoConIVA)) - 1) * 100).toFixed(2);
@@ -69,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateMainCalculation = () => {
         const com = parseInput(comisionInput.value);
         const rec = parseInput(recuperoInput.value);
-        const result = calculateMarkup(com, rec);
+        const tasa = parseInput(tasaProductecaInput.value);
+        const result = calculateMarkup(com, rec, tasa);
         
         if (result === null) {
             markupResult.textContent = "Inválido";
@@ -136,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name,
                 comision: comisionInput.value,
                 recupero: recuperoInput.value,
+                tasaProducteca: tasaProductecaInput.value,
                 image: newStoreBase64 || 'https://via.placeholder.com/60?text=Shop',
                 markup: currentMarkupValue,
                 createdAt: now,
@@ -147,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveArea.style.display = 'none';
             comisionInput.value = '';
             recuperoInput.value = '';
+            tasaProductecaInput.value = '1%';
             markupResult.textContent = '---';
             Swal.fire({
                 icon: 'success',
@@ -172,14 +176,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateInlineMarkup = (id) => {
         const comInput = document.getElementById(`edit-com-${id}`);
         const recInput = document.getElementById(`edit-rec-${id}`);
+        const tasaInput = document.getElementById(`edit-tasa-${id}`);
         const preview = document.getElementById(`markup-preview-${id}`);
         const confirmBtn = tariffsList.querySelector(`[data-save-id="${id}"]`);
 
-        if (!comInput || !recInput || !preview) return;
+        if (!comInput || !recInput || !tasaInput || !preview) return;
 
         const com = parseInput(comInput.value);
         const rec = parseInput(recInput.value);
-        const markup = calculateMarkup(com, rec);
+        const tasa = parseInput(tasaInput.value);
+        const markup = calculateMarkup(com, rec, tasa);
 
         if (markup === null) {
             preview.textContent = "Inválido";
@@ -222,6 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <input type="text" class="inline-input" id="edit-rec-${key}" value="${item.recupero}">
                             </div>
                             <div class="input-col">
+                                <label class="small-label">Producteca</label>
+                                <input type="text" class="inline-input" id="edit-tasa-${key}" value="${item.tasaProducteca || '1%'}">
+                            </div>
+                            <div class="input-col">
                                 <label class="small-label">IVA</label>
                                 <input type="text" class="inline-input" value="21%" disabled>
                             </div>
@@ -236,14 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const cInput = div.querySelector(`#edit-com-${key}`);
                 const rInput = div.querySelector(`#edit-rec-${key}`);
+                const tInput = div.querySelector(`#edit-tasa-${key}`);
                 cInput.oninput = () => updateInlineMarkup(key);
                 rInput.oninput = () => updateInlineMarkup(key);
+                tInput.oninput = () => updateInlineMarkup(key);
             } else {
                 div.innerHTML = `
                     <img src="${item.image}" class="tariff-img">
                     <div class="tariff-info">
                         <div class="tariff-name">${item.name}</div>
-                        <div class="tariff-details">Com: ${item.comision}% | Rec: ${item.recupero}% | IVA: 21%</div>
+                        <div class="tariff-details">Com: ${item.comision}% | Rec: ${item.recupero}% | Producteca: ${item.tasaProducteca || '1%'} | IVA: 21%</div>
                     </div>
                     <div class="tariff-val-container">
                         <div class="tariff-val">${item.markup}%</div>
@@ -309,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const newName = document.getElementById(`edit-name-${id}`).value.trim();
             const newComStr = document.getElementById(`edit-com-${id}`).value;
             const newRecStr = document.getElementById(`edit-rec-${id}`).value;
+            const newTasaStr = document.getElementById(`edit-tasa-${id}`).value;
 
             if (!newName) { 
                 Swal.fire({ icon: 'error', title: 'Error', text: 'El nombre no puede estar vacío.' }); 
@@ -317,7 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const com = parseInput(newComStr);
             const rec = parseInput(newRecStr);
-            const markup = calculateMarkup(com, rec);
+            const tasa = parseInput(newTasaStr);
+            const markup = calculateMarkup(com, rec, tasa);
 
             if (markup === null) { 
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Valores inválidos.' }); 
@@ -331,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     name: newName,
                     comision: newComStr,
                     recupero: newRecStr,
+                    tasaProducteca: newTasaStr,
                     markup: markup,
                     updatedAt: Date.now(),
                     createdAt: item.createdAt || item.timestamp || Date.now() // Preservar fecha original
@@ -354,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     comisionInput.oninput = updateMainCalculation;
     recuperoInput.oninput = updateMainCalculation;
+    tasaProductecaInput.oninput = updateMainCalculation;
     recargoActualInput.oninput = updateAdjustment;
     recargoObjetivoInput.oninput = updateAdjustment;
 });
