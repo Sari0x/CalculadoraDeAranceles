@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAVVpSUammfePWZUuwNfuzHCbLrbQFwx0U",
@@ -15,7 +14,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const storage = getStorage(app);
 const tariffsRef = ref(db, 'tariffs');
 
 // DOM Elements
@@ -40,7 +38,7 @@ const cancelSaveBtn = document.getElementById('cancel-save');
 
 // State
 let currentMarkup = null;
-let selectedFile = null;
+let base64Image = null;
 let currentItems = {};
 
 // Helper: Normalize inputs
@@ -85,15 +83,29 @@ const calculateAdjustment = () => {
     ajusteResult.textContent = `${adjustment.toFixed(2)}%`;
 };
 
-// 3. UI: Image Preview
+// 3. UI: Handle Image with Base64
 storeImageFile.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
-        selectedFile = file;
+        // Redimensionar imagen para que no ocupe tanto espacio en la DB
         const reader = new FileReader();
-        reader.onload = (e) => {
-            imagePreview.src = e.target.result;
-            imagePreviewContainer.style.display = 'block';
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 200;
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                base64Image = canvas.toDataURL('image/jpeg', 0.7); // Comprimir al 70%
+                imagePreview.src = base64Image;
+                imagePreviewContainer.style.display = 'block';
+            };
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     }
@@ -105,7 +117,7 @@ saveBtn.addEventListener('click', () => {
     storeNameInput.value = '';
     storeImageFile.value = '';
     imagePreviewContainer.style.display = 'none';
-    selectedFile = null;
+    base64Image = null;
     confirmSaveBtn.textContent = 'Guardar';
     saveModal.classList.add('active');
 });
@@ -124,30 +136,12 @@ confirmSaveBtn.addEventListener('click', async () => {
     }
 
     confirmSaveBtn.disabled = true;
-    confirmSaveBtn.textContent = 'Procesando...';
+    confirmSaveBtn.textContent = 'Guardando...';
 
     try {
-        let imageUrl = editId ? currentItems[editId].image : 'https://via.placeholder.com/60?text=Shop';
-
-        if (selectedFile) {
-            console.log("Iniciando subida de imagen:", selectedFile.name);
-            const storageRef = sRef(storage, `logos/${Date.now()}_${selectedFile.name}`);
-            try {
-                const snapshot = await uploadBytes(storageRef, selectedFile);
-                console.log("Subida exitosa, obteniendo URL...");
-                imageUrl = await getDownloadURL(snapshot.ref);
-            } catch (storageError) {
-                console.error("Error específico de Firebase Storage:", storageError);
-                alert("Error al subir la imagen. Verifica las Reglas de Seguridad en Firebase Storage.");
-                confirmSaveBtn.disabled = false;
-                confirmSaveBtn.textContent = editId ? 'Actualizar' : 'Guardar';
-                return; // Detener si falla la subida
-            }
-        }
-
         const data = {
             name,
-            image: imageUrl,
+            image: base64Image || (editId ? currentItems[editId].image : 'https://via.placeholder.com/60?text=Shop'),
             markup: currentMarkup || (editId ? currentItems[editId].markup : '0.00'),
             timestamp: Date.now()
         };
@@ -161,7 +155,7 @@ confirmSaveBtn.addEventListener('click', async () => {
         saveModal.classList.remove('active');
     } catch (error) {
         console.error("Error al guardar:", error);
-        alert("Hubo un error al guardar los datos.");
+        alert("Hubo un error al guardar en la base de datos.");
     } finally {
         confirmSaveBtn.disabled = false;
         confirmSaveBtn.textContent = editId ? 'Actualizar' : 'Guardar';
@@ -192,8 +186,8 @@ onValue(tariffsRef, (snapshot) => {
         tariffsList.appendChild(div);
     });
 
-    // Event Delegation for Edit and Delete
-    tariffsList.addEventListener('click', (e) => {
+    // Event Delegation
+    tariffsList.onclick = (e) => {
         const id = e.target.getAttribute('data-id');
         if (!id) return;
 
@@ -205,15 +199,16 @@ onValue(tariffsRef, (snapshot) => {
             const item = currentItems[id];
             editIdInput.value = id;
             storeNameInput.value = item.name;
+            base64Image = item.image;
             imagePreview.src = item.image;
             imagePreviewContainer.style.display = 'block';
             confirmSaveBtn.textContent = 'Actualizar';
             saveModal.classList.add('active');
         }
-    });
+    };
 });
 
-// Event Listeners for Calculations
+// Event Listeners
 comisionInput.addEventListener('input', calculateTariff);
 recuperoInput.addEventListener('input', calculateTariff);
 recargoActualInput.addEventListener('input', calculateAdjustment);
