@@ -131,13 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
         addToListBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
         try {
+            const now = Date.now();
             await push(tariffsRef, {
                 name,
                 comision: comisionInput.value,
                 recupero: recuperoInput.value,
                 image: newStoreBase64 || 'https://via.placeholder.com/60?text=Shop',
                 markup: currentMarkupValue,
-                timestamp: Date.now()
+                createdAt: now,
+                updatedAt: now
             });
             newStoreName.value = '';
             newStoreImage.value = '';
@@ -324,12 +326,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             btn.disabled = true;
             try {
+                const item = currentItems[id];
                 await update(ref(db, `tariffs/${id}`), {
                     name: newName,
                     comision: newComStr,
                     recupero: newRecStr,
                     markup: markup,
-                    timestamp: Date.now()
+                    updatedAt: Date.now(),
+                    createdAt: item.createdAt || item.timestamp || Date.now() // Preservar fecha original
                 });
                 editingId = null;
                 renderList();
