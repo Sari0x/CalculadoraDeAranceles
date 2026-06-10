@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Aranceles</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Aranceles</h1>
+            <p class="subtitle">Gestión de comisiones y recargos</p>
+        </header>
+
+        <main>
+            <section class="card calculator-section">
+                <h2>Calculadora de Markup</h2>
+                <div class="input-group">
+                    <label for="comision">Comisión (%)</label>
+                    <input type="text" id="comision" placeholder="Ej: 30" inputmode="decimal">
+                </div>
+                <div class="input-group">
+                    <label for="recupero">Recupero (%)</label>
+                    <input type="text" id="recupero" placeholder="Ej: 5" inputmode="decimal">
+                </div>
+                <div class="input-group">
+                    <label for="iva">IVA (Fijo)</label>
+                    <input type="text" id="iva" value="21%" disabled>
+                </div>
+                <div class="result-box">
+                    <span class="result-label">Markup Final</span>
+                    <span id="markup-result" class="result-value">---</span>
+                </div>
+                <button id="save-tariff-btn" class="btn btn-secondary" disabled>Guardar en Lista</button>
+            </section>
+
+            <section class="card calculator-section">
+                <h2>Ajuste de Recargo</h2>
+                <div class="input-group">
+                    <label for="recargo-actual">Recargo Actual (%)</label>
+                    <input type="text" id="recargo-actual" placeholder="Ej: 80" inputmode="decimal">
+                </div>
+                <div class="input-group">
+                    <label for="recargo-objetivo">Recargo Objetivo (%)</label>
+                    <input type="text" id="recargo-objetivo" placeholder="Ej: 45" inputmode="decimal">
+                </div>
+                <div class="result-box">
+                    <span class="result-label">Ajuste Necesario</span>
+                    <span id="ajuste-result" class="result-value">---</span>
+                </div>
+            </section>
+
+            <section class="card list-section">
+                <h2>Aranceles Guardados</h2>
+                <div id="tariffs-list" class="tariffs-grid">
+                    <!-- Los items se cargarán aquí desde Firebase -->
+                    <p class="empty-msg">Cargando aranceles...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para guardar -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <h3>Guardar Arancel</h3>
+            <div class="input-group">
+                <label for="store-name">Nombre de la Tienda / Campaña</label>
+                <input type="text" id="store-name" placeholder="Ej: Tienda BNA">
+            </div>
+            <div class="input-group">
+                <label for="store-image-file">Imagen de la Tienda</label>
+                <input type="file" id="store-image-file" accept="image/*">
+                <p class="input-help">Opcional: puedes subir una foto o logo</p>
+            </div>
+            <div id="image-preview-container" class="preview-container" style="display: none;">
+                <img id="image-preview" src="" alt="Vista previa">
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-save" class="btn btn-text">Cancelar</button>
+                <button id="confirm-save" class="btn btn-primary">Guardar</button>
+            </div>
+            <input type="hidden" id="edit-id">
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
