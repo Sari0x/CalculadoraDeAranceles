@@ -97,6 +97,16 @@ input:disabled {
     cursor: not-allowed;
 }
 
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.action-row {
+    margin-top: 12px;
+}
+
 .result-box {
     background-color: #f1f5f9;
     padding: 16px;
@@ -182,7 +192,7 @@ input:disabled {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.tariff-item:hover {
+.tariff-item:not(.is-editing):hover {
     transform: translateX(4px);
     box-shadow: var(--shadow);
 }
@@ -254,50 +264,61 @@ input:disabled {
     opacity: 0.8;
 }
 
-.modal-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
 .tariff-item.is-editing {
     border-color: var(--primary);
     background: #f0f7ff;
 }
 
 .inline-edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
     width: 100%;
 }
 
 .inline-input-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
 }
 
-.inline-input {
-    padding: 6px 10px;
+.input-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.small-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.inline-markup-preview {
     font-size: 0.85rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    width: 100%;
-}
-
-.save-inline-btn {
-    background: var(--primary);
-    color: white;
-}
-
-.cancel-inline-btn {
-    background: #94a3b8;
-    color: white;
+    font-weight: 700;
+    color: var(--primary);
+    background: #eef2ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 4px;
 }
 
 .action-btn.confirm-btn {
-    background: #10b981;
-    color: white;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.action-btn.cancel-btn {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.action-btn.confirm-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
 }
 
 @media (max-width: 600px) {
@@ -312,7 +333,7 @@ input:disabled {
         width: 40px;
         height: 40px;
     }
-    .modal-row {
+    .input-row {
         grid-template-columns: 1fr;
         gap: 0;
     }
