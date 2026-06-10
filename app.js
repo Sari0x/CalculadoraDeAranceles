@@ -16,7 +16,23 @@ const db = getDatabase(app);
 const tariffsRef = ref(db, 'tariffs');
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Elements
+    // Theme Toggle
+    const themeBtn = document.getElementById('dark-mode-toggle');
+    const themeIcon = themeBtn.querySelector('i');
+    const isDark = localStorage.getItem('dark-mode') === 'true';
+    
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        themeIcon.className = 'bi bi-sun-fill';
+    }
+
+    themeBtn.onclick = () => {
+        const dark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('dark-mode', dark);
+        themeIcon.className = dark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+    };
+
+    // Calculator Elements
     const comisionInput = document.getElementById('comision');
     const recuperoInput = document.getElementById('recupero');
     const markupResult = document.getElementById('markup-result');
@@ -101,10 +117,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addToListBtn.onclick = async () => {
         const name = newStoreName.value.trim();
-        if (!name) { alert("Por favor ingresa un nombre para la tienda."); return; }
+        if (!name) { 
+            Swal.fire({
+                icon: 'warning',
+                title: 'Faltan datos',
+                text: 'Por favor ingresa un nombre para la tienda.',
+                confirmButtonColor: '#D0021B'
+            });
+            return; 
+        }
         
         addToListBtn.disabled = true;
-        addToListBtn.textContent = 'Guardando...';
+        addToListBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
         try {
             await push(tariffsRef, {
@@ -122,9 +146,21 @@ document.addEventListener('DOMContentLoaded', () => {
             comisionInput.value = '';
             recuperoInput.value = '';
             markupResult.textContent = '---';
+            Swal.fire({
+                icon: 'success',
+                title: 'Guardado',
+                text: 'Arancel añadido correctamente.',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } catch (error) {
             console.error(error);
-            alert("Error al guardar.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo guardar el arancel.',
+                confirmButtonColor: '#D0021B'
+            });
         } finally {
             addToListBtn.disabled = false;
             addToListBtn.textContent = 'Guardar en Lista';
@@ -191,12 +227,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div id="markup-preview-${key}" class="inline-markup-preview">Markup: ${item.markup}%</div>
                     </div>
                     <div class="tariff-actions">
-                        <button class="action-btn confirm-btn" data-save-id="${key}">✓</button>
-                        <button class="action-btn cancel-btn" data-cancel-id="${key}">✕</button>
+                        <button class="action-btn confirm-btn" data-save-id="${key}"><i class="bi bi-check-lg"></i></button>
+                        <button class="action-btn cancel-btn" data-cancel-id="${key}"><i class="bi bi-x-lg"></i></button>
                     </div>
                 `;
 
-                // Live updates for edit mode
                 const cInput = div.querySelector(`#edit-com-${key}`);
                 const rInput = div.querySelector(`#edit-rec-${key}`);
                 cInput.oninput = () => updateInlineMarkup(key);
@@ -212,8 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="tariff-val">${item.markup}%</div>
                     </div>
                     <div class="tariff-actions">
-                        <button class="action-btn edit-btn" data-edit-id="${key}">✎</button>
-                        <button class="action-btn delete-btn" data-delete-id="${key}">✕</button>
+                        <button class="action-btn edit-btn" data-edit-id="${key}"><i class="bi bi-pencil-square"></i></button>
+                        <button class="action-btn delete-btn" data-delete-id="${key}"><i class="bi bi-trash3-fill"></i></button>
                     </div>
                 `;
             }
@@ -232,8 +267,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (btn.hasAttribute('data-delete-id')) {
             const id = btn.getAttribute('data-delete-id');
-            if (confirm("¿Eliminar este arancel?")) {
-                await remove(ref(db, `tariffs/${id}`));
+            
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#D0021B',
+                cancelButtonColor: '#666666',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await remove(ref(db, `tariffs/${id}`));
+                    Swal.fire({
+                        title: 'Eliminado',
+                        text: 'El arancel ha sido borrado.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } catch (err) {
+                    Swal.fire('Error', 'No se pudo eliminar.', 'error');
+                }
             }
         } 
         else if (btn.hasAttribute('data-edit-id')) {
@@ -250,13 +308,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const newComStr = document.getElementById(`edit-com-${id}`).value;
             const newRecStr = document.getElementById(`edit-rec-${id}`).value;
 
-            if (!newName) { alert("El nombre no puede estar vacío."); return; }
+            if (!newName) { 
+                Swal.fire({ icon: 'error', title: 'Error', text: 'El nombre no puede estar vacío.' }); 
+                return; 
+            }
 
             const com = parseInput(newComStr);
             const rec = parseInput(newRecStr);
             const markup = calculateMarkup(com, rec);
 
-            if (markup === null) { alert("Valores inválidos."); return; }
+            if (markup === null) { 
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Valores inválidos.' }); 
+                return; 
+            }
 
             btn.disabled = true;
             try {
@@ -269,9 +333,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 editingId = null;
                 renderList();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Actualizado',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             } catch (err) {
                 console.error(err);
-                alert("Error al actualizar.");
+                Swal.fire('Error', 'No se pudo actualizar.', 'error');
             } finally {
                 btn.disabled = false;
             }
