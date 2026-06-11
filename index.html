@@ -5,26 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Aranceles</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-top">
-                <img src="https://www.novogar.com.ar/image/0/0_0-LOGO_NOVOGAR.png" alt="Novogar Logo" class="brand-logo">
-                <button id="dark-mode-toggle" class="theme-btn">
-                    <i class="bi bi-moon-fill"></i>
-                </button>
+    <header>
+        <div class="header-inner">
+            <img src="https://www.novogar.com.ar/image/0/0_0-LOGO_NOVOGAR.png" alt="Novogar Logo" class="brand-logo">
+            <div class="header-sep"></div>
+            <div class="header-title">
+                <h1>Calculadora de Aranceles</h1>
+                <p class="subtitle">Gestión de comisiones y recargos</p>
             </div>
-            <h1>Calculadora de Aranceles</h1>
-            <p class="subtitle">Gestión de comisiones y recargos</p>
-        </header>
+            <button id="dark-mode-toggle" class="theme-btn">
+                <i class="bi bi-moon-fill"></i>
+            </button>
+        </div>
+    </header>
 
-        <main>
+    <main class="page-body">
+        <div class="calculators-grid">
             <section class="card calculator-section">
                 <h2>Calculadora de Markup</h2>
                 <div class="input-row">
@@ -51,8 +52,8 @@
                     <span class="result-label">Markup Final</span>
                     <span id="markup-result" class="result-value">---</span>
                 </div>
-                
-                <div id="save-area" style="display: none; border-top: 1px solid var(--border); padding-top: 20px; margin-top: 10px;">
+
+                <div id="save-area" style="display: none;">
                     <div class="input-group">
                         <label for="new-store-name">Nombre de la Tienda</label>
                         <input type="text" id="new-store-name" placeholder="Ej: Tienda BNA">
@@ -82,17 +83,16 @@
                     <span id="ajuste-result" class="result-value">---</span>
                 </div>
             </section>
+        </div>
 
-            <section class="card list-section">
-                <h2>Aranceles Guardados</h2>
-                <div id="tariffs-list" class="tariffs-list-container">
-                    <p class="empty-msg">Cargando aranceles...</p>
-                </div>
-            </section>
-        </main>
-    </div>
+        <section class="card list-section">
+            <h2>Aranceles Guardados</h2>
+            <div id="tariffs-list" class="tariffs-list-container">
+                <p class="empty-msg">Cargando aranceles...</p>
+            </div>
+        </section>
+    </main>
 
-    <!-- Firebase SDK -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
